@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
+<h:head>
+	<h:outputStylesheet library="css" name="common.css" />
+	<title>Coffey Atlas</title>
+</h:head>
+<h:body style="width: 100%!important;font-size: 15px; color: #616161;">
+	<div style="height:55px;" />
+	<div id="loginCenter" align="center" style="background-color:  #FEFEFE; height: 90%; width: 100%!important;">
+		<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+		<p style="color: red;">ERRO AO EFETUAR O LOGIN</p>
+		<p style="color: red;">favor verificar o usuário e senha</p>
+		<h:panelGrid columns="1">
+			<input type="button" name="voltar" value="Voltar" class="ui-priority-primary" onclick="window.location = '#{commonAuthentication.getLoginUrl()}';" />
+		</h:panelGrid>
+	</div>
+	<div style="height:55px;" />
+</h:body>
+</html>

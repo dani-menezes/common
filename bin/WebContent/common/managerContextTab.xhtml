@@ -1,0 +1,852 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+</h:head>
+<h:body>
+	<f:view contentType="text/html" locale="#{atlasTranslator.getStaticLocale()}" >
+		<h:outputStylesheet library="css" name="common.css"  />
+		<div style="height:50px; " >
+			<ui:include src="menu.xhtml" />
+			<ui:include src="loadingStatus.xhtml" />
+			<p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()"/>
+		</div>
+		<div id="divContentPage" align="center" style="background-color:  #FEFEFE; height: 90%; overflow-y:scroll;">
+			<h:form id="managerContextForm">
+				<div style="padding-left:11%; padding-top:0.3%; height: 45px; border-color: white !important;" align="left">
+					<p:commandButton value="#{translator['LABEL_CREATE_CONTEXT']}" styleClass="buttonAdd" id="openCrudButton" actionListener="#{managerContextView.clearEntity}" oncomplete="PF('entityCreateWindow').show()" update=":managerContextForm :crudForm" />
+				</div>
+				
+				<!-- HEADER  -->
+				<div style="width: 80%;" align="left">
+					<p:growl id="messages" widgetVar="messages" showDetail="false" sticky="false" life="6500" />
+
+					<!-- CONTEXTO  -->
+					<h:panelGrid columns="1" cellpadding="5" id="contextListPanel">
+						<p:dataTable paginatorPosition="bottom" var="context" value="#{managerContextView.entityList}" paginator="true" rows="5" rowKey="#{context.id}" selection="#{managerContextView.entitySelected}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}" >
+							<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onRowSelected}" update=":managerContextForm" />
+							<p:ajax event="rowUnselect" process="@this" listener="#{managerContextView.onRowUnselected}" update="@all" />
+							<f:facet name="header">#{translator['LABEL_CONTEXTS']}</f:facet>
+							<p:column headerText="#{translator['LABEL_TITLE']}">
+								<h:outputText value="#{context.title}" />
+							</p:column>
+							<p:column headerText="#{translator['LABEL_VIEWER']}" width="8%;">
+								<div align="center">
+									<p:commandLink onclick="window.open('/app?ctx=#{context.title}');">
+										<h:graphicImage value="/resources/img/map.png" width="22px;" height="15px;" />
+									</p:commandLink>
+								</div>
+							</p:column>
+							<p:column headerText="#{translator['LABEL_EDIT']}" width="6%">
+								<div align="center">
+								   <p:commandLink action="#{managerContextView.editEntity}" oncomplete="PF('entityCreateWindow').show()" update=":managerContextForm :crudForm" ajax="true">
+								   	  <h:graphicImage value="/resources/img/edit.png" width="15px;" height="15px;" />
+								      <f:setPropertyActionListener target="#{managerContextView.entity}" value="#{context}" />
+								   </p:commandLink>
+								</div>
+							</p:column>
+							<p:column headerText="#{translator['LABEL_DELETE']}" width="6%">
+								<div align="center">
+								   <p:commandLink action="#{managerContextView.deleteEntity}" update="@all" ajax="true">
+								   	  <h:graphicImage value="/resources/img/remove.png" width="19px;" height="15px;" />
+								      <f:setPropertyActionListener target="#{managerContextView.entity}" value="#{context}" />
+								   </p:commandLink>
+								</div>
+							</p:column>
+							<f:facet name="footer"><h:outputText value="#{translator['MESSAGE_TOTAL_RECORDS']} : #{contextView.entityListSize}"/></f:facet>
+						</p:dataTable>
+					</h:panelGrid>
+
+
+					<div align="center" style="border: none !important;">
+						<p:panelGrid style="margin-top:2px; width: 94% !important; border: none !important;" rendered="#{not empty managerContextView.entitySelected}">
+							<p:row style="border: none !important; ">
+								<p:column style="width: 30% !important;  border: none !important;">
+									<p:fieldset id="contextDetailsFS" widgetVar="contextDetailsFS" style="width:91%; margin-top:5px; background-color:#F5F5F5">
+										<h:outputText value="#{translator['LABEL_CONTEXT_DATA']}" style="font-weight: bold; " />
+									</p:fieldset>
+									<h:panelGrid columns="2" cellpadding="5" id="detailsPanelGrid" style="margin-top:2px; width: 100% !important; border: none !important; height: 125px !important; display: block !important;" >
+
+										<h:outputText value="#{translator['LABEL_CONTEXT']}: " style="font-weight: bold;" />
+										<h:outputText value="#{managerContextView.entitySelected.title}" />
+
+										<h:outputText value="#{translator['LABEL_MENU']}: " style="font-weight: bold;" />
+										<h:outputText value="#{managerContextView.entitySelected.colorMenu}" style="font-weight: bold;background-color: ##{managerContextView.entitySelected.colorMenu} !important;" />
+
+										<h:outputText value="#{translator['LABEL_BACKGROUND']}: " style="font-weight: bold;" />
+										<h:outputText value="#{managerContextView.entitySelected.colorBackground}" style="font-weight: bold;background-color: ##{managerContextView.entitySelected.colorBackground} !important;" />
+
+									</h:panelGrid>
+								</p:column>
+								<p:column style="width: 70% !important; border: none !important;">
+									<p:fieldset id="projectTreeFS" widgetVar="projectTreeFS" style="width:97%; margin-top:5px; background-color:#F5F5F5">
+										<h:outputText value="#{translator['LABEL_THEME_TREE']}" style="font-weight: bold;" />
+									</p:fieldset>
+									<p:tree id="themeTree" value="#{managerContextView.root}" var="node" draggable="true" droppable="true" dragMode="self" selectionMode="single" selection="#{managerContextView.selectedNode}" styleClass="themeTree">
+										<p:ajax event="dragdrop" listener="#{managerContextView.onTreeDragDrop}" update=":managerContextForm" />
+										<p:treeNode expandedIcon="ui-icon-folder-open" collapsedIcon="ui-icon-folder-collapsed" style="width: 100% !important; border: none !important;" >
+											<h:outputText value="#{node}" />
+										</p:treeNode>
+									</p:tree>
+									<p:contextMenu for="themeTree">
+								        <p:menuitem value="#{translator['LABEL_ADD_ON']}" icon="ui-icon-circle-plus" actionListener="#{managerContextView.createThemeFromTree}" update=":crudThemeForm :managerContextForm:themeTree :managerContextForm:messages"  />
+								        <p:menuitem value="#{translator['LABEL_VIEW']}" icon="ui-icon-circle-zoomin" actionListener="#{managerContextView.selectThemeFromTree}" update=":crudThemeForm :managerContextForm:themeTree :managerContextForm:messages :managerContextForm:projectCreateModal" />
+								        <p:menuitem value="#{translator['LABEL_DISASSOCIATE']}" icon="ui-icon-circle-close" actionListener="#{managerContextView.disassociateThemeFromTree}" update=":crudThemeForm :managerContextForm:themeTree :managerContextForm:messages :managerContextForm:tabView:selectedProjectsTable :managerContextForm:tabView:availabelProjects" />
+								    </p:contextMenu>
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+					</div>
+
+					<p:tabView id="tabView" rendered="#{not empty managerContextView.entitySelected}" effect="fade" effectDuration="normal" >
+						<!-- ### ### ### THEME ### ### ###-->  
+	    				<p:tab title="&nbsp;&nbsp;&nbsp;#{translator['LABEL_THEMES']}&nbsp;&nbsp;" rendered="#{not empty managerContextView.entitySelected}" titleStyleClass="themeTitle">
+	    					&nbsp;&nbsp;<p:commandButton value="#{translator['LABEL_CREATE_THEME']}" styleClass="buttonAdd" id="openThemeButton" actionListener="#{managerContextView.clearTheme}" oncomplete="PF('entityCreateThemeWindow').show()" update=":crudThemeForm" />
+	    					<div align="center">
+			    				<p:fieldset id="tabPRDetailsTitle" widgetVar="tabPRDetailsTitle" style="width:97%; margin-top:15px; background-color:#F5F5F5">
+									<h:outputText value="#{translator['LABEL_ASSOCIATE_THEME_TO_CONTEXT']}" style="font-weight: bold;" />
+								</p:fieldset>
+							</div>
+		    				<div align="left">
+								<h:panelGrid columns="2" cellpadding="5" >
+					
+						        	<p:dataTable paginatorPosition="bottom" id="availabelProjects" var="project" value="#{managerContextView.projectsDisassociated}" paginator="true" rows="5" rowKey="#{project.id}" selection="#{managerContextView.projectToDetail}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}" style=" display: block !important;" >
+							        	<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onSelectProject}" oncomplete="PF('projectCreateWindow').show()" update=":managerContextForm:projectCreateModal"/> 
+							        	<f:facet name="header">#{translator['LABEL_THEME_AVAILABLE']}</f:facet>
+						            	
+					            		<p:column style="width:20px">		
+											<p:commandLink action="#{managerContextView.associateProject}" update="@all" ajax="true">
+												<div align="center">
+							                		<h:graphicImage value="/resources/img/link.png" />
+													<f:setPropertyActionListener target="#{managerContextView.projectSelected}" value="#{project}" />
+												</div>
+											</p:commandLink>
+										</p:column>
+										
+							            <p:column headerText="#{translator['LABEL_NAME']}" >
+							                <h:outputText value="#{project.name}" />
+							            </p:column>
+							        </p:dataTable>
+								 
+						            <p:dataTable paginatorPosition="bottom" id="selectedProjectsTable" var="project" value="#{managerContextView.projectsAssociated }" paginator="true" rows="5" style="display: block !important;"
+						            			 rowKey="#{project.id}" selection="#{managerContextView.projectToDetail}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}" >
+						            	<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onSelectProject}" oncomplete="PF('projectCreateWindow').show()" resetValues="true" update=":managerContextForm:projectCreateModal :managerContextForm:tabViewProjects:availabelMetadatas"/>
+						            	<f:facet name="header">#{translator['LABEL_THEME_SELECTED']}</f:facet>
+		
+										<p:column style="width:20px">
+											<div align="center">
+												<p:commandLink action="#{managerContextView.disassociateProject}" update="@all" ajax="true">
+													<h:graphicImage value="/resources/img/remove.png" width="19px;" height="15px;" />
+													<f:setPropertyActionListener target="#{managerContextView.projectSelected}" value="#{project}" />
+												</p:commandLink>
+											</div>
+										</p:column>
+		
+										<p:column headerText="#{translator['LABEL_NAME']}" >
+						                    <h:outputText value="#{project.name}" />
+						                </p:column>
+						                
+						            </p:dataTable>
+								</h:panelGrid>
+							</div>
+	    				</p:tab>
+						<!-- ### ### ### SERVICOS EXTERNOS ### ### ###-->  
+	    				<p:tab id="externalTab" title="&nbsp;&nbsp;&nbsp;#{translator['LABEL_EXTERNAL_SERVICES']}&nbsp;&nbsp;" rendered="#{not empty managerContextView.entitySelected}" titleStyleClass="externalTitle">
+	    					&nbsp;&nbsp;<p:commandButton value="#{translator['LABEL_CREATE_EXTERNAL_SERVICE']}" styleClass="buttonAdd" id="openExternalServiceButton" actionListener="#{managerContextView.clearExternalService()}" oncomplete="PF('entityCreateExternalServiceWindow').show()" update=":crudExternalServiceForm" />
+	    					<div align="center">
+		    					<p:fieldset id="tabESDetailsTitle" widgetVar="tabESDetailsTitle" style="width:97%; margin-top:15px; background-color:#F5F5F5">
+									<h:outputText value="#{translator['LABEL_ASSOCIATE_EXTERNAL_TO_CONTEXT']}" style="font-weight: bold;" />
+								</p:fieldset>
+							</div>
+		    				<div align="left">
+								<h:panelGrid columns="2" cellpadding="5" id="externalPanelGrid">
+					
+							        <p:dataTable paginatorPosition="bottom" id="availabelExternals" var="external" value="#{managerContextView.externalsDisassociated}" paginator="true" rows="5"
+							        			 rowKey="#{external.id}" selection="#{managerContextView.externalToDetail}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}" >
+							        	<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onSelectExternal}" oncomplete="PF('externalCreateWindow').show()" update=":managerContextForm:externalCreateModal :managerContextForm:tabViewProjects:availabelMetadatas"/>
+							        	<f:facet name="header">#{translator['LABEL_EXTERNAL_SERVICES_AVAILABLE']}</f:facet>
+											
+											<p:column style="width:20px">	
+												<p:commandLink action="#{managerContextView.associateExternal}" update="@all" ajax="true">
+													<div align="center">
+								                		<h:graphicImage value="/resources/img/link.png" />
+														<f:setPropertyActionListener target="#{managerContextView.externalSelected}" value="#{external}" />
+													</div>
+												</p:commandLink>
+											</p:column>
+											<p:column headerText="#{translator['LABEL_NAME']}" >
+								                <h:outputText value="#{external.name}" />
+								            </p:column>
+							        </p:dataTable>
+								 
+						            <p:dataTable paginatorPosition="bottom" id="selectedExternalsTable" var="external" value="#{managerContextView.externalsAssociated}" paginator="true" rows="5"
+						            			 rowKey="#{external.id}" selection="#{managerContextView.externalToDetail}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}" >
+						            	<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onSelectExternal}" oncomplete="PF('externalCreateWindow').show()" update=":managerContextForm:externalCreateModal"/>
+						            	<f:facet name="header">#{translator['LABEL_EXTERNAL_SERVICES_SELECTED']}</f:facet>
+		
+										<p:column style="width:20px">
+											<div align="center">
+												<p:commandLink action="#{managerContextView.disassociateExternal}" update="@all" ajax="true">
+													<h:graphicImage value="/resources/img/remove.png" width="19px;" height="15px;" />
+													<f:setPropertyActionListener target="#{managerContextView.externalSelected}" value="#{external}" />
+												</p:commandLink>
+											</div>
+										</p:column>
+		
+										<p:column headerText="#{translator['LABEL_NAME']}" >
+						                    <h:outputText value="#{external.name}" />
+						                </p:column>
+						                
+						            </p:dataTable>
+								 	
+								</h:panelGrid>
+							</div>
+	    				</p:tab>
+						<!-- ### ### ### PLUGINS ### ### ###-->  
+	    				<p:tab id="pluginTab" title="&nbsp;&nbsp;&nbsp;#{translator['LABEL_PLUGINS']}&nbsp;&nbsp;" rendered="#{not empty managerContextView.entitySelected}" titleStyleClass="pluginTitle">
+	    					&nbsp;&nbsp;<p:commandButton value="#{translator['LABEL_CREATE_PLUGIN']}" styleClass="buttonAdd" id="openPluginButton" actionListener="#{managerContextView.clearPlugin}" oncomplete="PF('entityCreatePluginWindow').show()" update=":crudPluginForm" />
+	    					<div align="center">
+		    					<p:fieldset id="tabPLDetailsTitle" widgetVar="tabPLDetailsTitle" style="width:97%; margin-top:15px; background-color:#F5F5F5">
+									<h:outputText value="#{translator['LABEL_ASSOCIATE_PLUGIN_TO_CONTEXT']}" style="font-weight: bold;" />
+								</p:fieldset>
+							</div>
+		    				<div align="left">
+								<h:panelGrid columns="2" cellpadding="5" id="pluginPanelGrid">
+					
+							        <p:dataTable paginatorPosition="bottom" id="availabelPlugins" var="plugin" value="#{managerContextView.pluginsDisassociated}" paginator="true" rows="5"
+							        			 rowKey="#{plugin.id}" selection="#{managerContextView.pluginToDetail}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}" >
+							        	<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onSelectPlugin}" oncomplete="PF('pluginCreateWindow').show()" update=":managerContextForm:pluginCreateModal"/>
+							        	<f:facet name="header">#{translator['LABEL_PLUGINS_AVAILABLE']}</f:facet>
+		
+							            <p:column style="width:20px">	
+											<p:commandLink action="#{managerContextView.associatePlugin}" update="@all" ajax="true">
+												<div align="center">
+							                		<h:graphicImage value="/resources/img/link.png" />
+													<f:setPropertyActionListener target="#{managerContextView.pluginSelected}" value="#{plugin}" />
+												</div>
+											</p:commandLink>
+										</p:column>
+		
+							            <p:column headerText="#{translator['LABEL_NAME']}" >
+							                <h:outputText value="#{plugin.text}" />
+							            </p:column>
+							            
+							        </p:dataTable>
+								 
+						            <p:dataTable paginatorPosition="bottom" id="selectedPluginsTable" var="plugin" value="#{managerContextView.pluginsAssociated}" paginator="true" rows="5"
+									             rowKey="#{plugin.id}" selection="#{managerContextView.pluginToDetail}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}" >
+							        	<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onSelectPlugin}" oncomplete="PF('pluginCreateWindow').show()" update=":managerContextForm:pluginCreateModal"/>
+						            	<f:facet name="header">#{translator['LABEL_PLUGINS_SELECTED']}</f:facet>
+		
+										<p:column style="width:20px">
+											<div align="center">
+												<p:commandLink action="#{managerContextView.disassociatePlugin}" update="@all" ajax="true">
+													<h:graphicImage value="/resources/img/remove.png" width="19px;" height="15px;" />
+													<f:setPropertyActionListener target="#{managerContextView.pluginSelected}" value="#{plugin}" />
+												</p:commandLink>
+											</div>
+										</p:column>
+		
+										<p:column headerText="#{translator['LABEL_NAME']}" >
+						                    <h:outputText value="#{plugin.text}" />
+						                </p:column>
+						                
+						            </p:dataTable>
+								 	
+								</h:panelGrid>
+							</div>
+	    				</p:tab>
+						<!-- ### ### ### BASE LAYERS ### ### ###-->  
+	    				<p:tab id="baselayerTab" title="&nbsp;&nbsp;&nbsp;&nbsp;#{translator['LABEL_BASELAYERS']}&nbsp;&nbsp;" rendered="#{not empty managerContextView.entitySelected}" titleStyleClass="baseLayerTitle">
+	    					&nbsp;&nbsp;<p:commandButton value="#{translator['LABEL_CREATE_BASELAYER']}" styleClass="buttonAdd" id="openBaseLayerButton" actionListener="#{managerContextView.clearBaseLayer()}" oncomplete="PF('entityCreateBaselayerWindow').show()" update=":crudBaselayerForm" />
+	    					<div align="center">
+		    					<p:fieldset id="tabBLDetailsTitle" widgetVar="tabBLDetailsTitle" style="width:97%; margin-top:15px; background-color:#F5F5F5">
+									<h:outputText value="#{translator['LABEL_ASSOCIATE_BASELAYER_TO_CONTEXT']}" style="font-weight: bold;" />
+								</p:fieldset>
+							</div>
+		    				<div align="left">
+								<h:panelGrid columns="2" cellpadding="5" id="baseLayersPanelGrid">
+					
+							        <p:dataTable paginatorPosition="bottom" id="availableBaseLayers" var="baseLayer" value="#{managerContextView.baseLayersDisassociated}" paginator="true" rows="5"
+									             rowKey="#{baseLayer.id}" selection="#{managerContextView.baseLayerToDetail}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}" >
+							        	<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onSelectBaselayer}" oncomplete="PF('baseLayerCreateWindow').show()" update=":managerContextForm:baseLayerCreateModal"/>
+								            	
+							        	<f:facet name="header">#{translator['LABEL_BASELAYERS_AVAILABLE']}</f:facet>
+							        	
+										<p:column style="width:20px">	
+											<p:commandLink action="#{managerContextView.associateBaseLayer}" update="@all" ajax="true">
+												<div align="center">
+							                		<h:graphicImage value="/resources/img/link.png" />
+													<f:setPropertyActionListener target="#{managerContextView.baseLayerSelected}" value="#{baseLayer}" />
+												</div>
+											</p:commandLink>
+										</p:column>
+										
+										<p:column headerText="#{translator['LABEL_NAME']}" >
+							                <h:outputText value="#{baseLayer.name}" />
+							            </p:column>
+							        </p:dataTable>
+								 
+						            <p:dataTable paginatorPosition="bottom" id="selectedBaselayersTable" var="baseLayer" value="#{managerContextView.baseLayerAssociated}" paginator="true" rows="5"
+						        			     rowKey="#{baseLayer.id}" selection="#{managerContextView.baseLayerToDetail}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}" >
+					        			<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onSelectBaselayer}" oncomplete="PF('baseLayerCreateWindow').show()" update=":managerContextForm:baseLayerCreateModal"/>
+						            	<f:facet name="header">#{translator['LABEL_BASELAYERS_SELECTED']}</f:facet>
+		
+										<p:column style="width:20px">
+											<div align="center">
+												<p:commandLink action="#{managerContextView.disassociateBaseLayer}" update="@all" ajax="true">
+													<h:graphicImage value="/resources/img/remove.png" width="19px;" height="15px;" />
+													<f:setPropertyActionListener target="#{managerContextView.baseLayerSelected}" value="#{baseLayer}" />
+												</p:commandLink>
+											</div>
+										</p:column>
+		
+										<p:column headerText="#{translator['LABEL_NAME']}" >
+						                    <h:outputText value="#{baseLayer.name}" />
+						                </p:column>
+						                
+						            </p:dataTable>
+						            
+								</h:panelGrid>
+							</div>
+	    				</p:tab>
+	    			</p:tabView>
+	    			<!-- ### ### ### DETALHES DO PROJETO ### ### ###-->
+					<p:dialog closeOnEscape="true" id="projectCreateModal" header="#{managerContextView.projectToDetail.name}" widgetVar="projectCreateWindow" showEffect="fade" hideEffect="fade" modal="true" height="65%" width="65%">
+						<div align="left">
+							<h:panelGrid id="display" columns="1" cellpadding="4">
+	
+								<h:panelGrid columns="2" cellpadding="5" id="layerPanelGrid01" style="width: 25%">
+									<h:outputText value="#{translator['LABEL_PARENT_PROJECT']}:" />
+									<h:outputText value="#{managerContextView.projectToDetail.parentProject.name}" />
+								</h:panelGrid>
+	
+								<h:panelGrid columns="2" cellpadding="5">
+									<p:tabView id="tabViewProjects" widgetVar="tabViewProjects" effect="fade" effectDuration="normal">
+										<p:tab id="tabMetadataLayers" title="&nbsp;&nbsp;&nbsp;#{translator['LABEL_METADATAS']}&nbsp;&nbsp;" rendered="#{not empty managerContextView.entitySelected}" titleStyleClass="metadataTitle">
+											<h:panelGrid columns="1" cellpadding="5" id="metadataPanelGrid02">
+												<p:column id="metadataColumn">
+													<div align="center">
+														<br />
+														<p:outputLabel for="serverList" value="#{translator['LABEL_SERVER']}: " style="margin-bottom: 15px;" />
+														<p:selectOneMenu id="serverList" value="#{managerContextView.serverSelected}">
+															<f:selectItem itemLabel="DataGEO" itemValue="DataGEO" />
+														</p:selectOneMenu>
+														<br />
+														<p:outputLabel for="fieldList" value="#{translator['LABEL_FIELDS']}:  " style="margin-bottom: 15px;" />
+														<p:selectOneMenu id="fieldList" value="#{managerContextView.fieldSelected}">
+															<f:selectItem itemLabel="Todos" itemValue="anytext" />
+															<f:selectItem itemLabel="Título" itemValue="title" />
+															<f:selectItem itemLabel="Assunto" itemValue="subject" />
+														</p:selectOneMenu>
+														<br />
+														<p:inputText id="searchText" value="#{managerContextView.searchText}" />
+														&nbsp;
+														<p:commandButton value="&nbsp;" id="searchButton" actionListener="#{managerContextView.sendCswRequest}" process="@this :managerContextForm:tabViewProjects:searchText :managerContextForm:tabViewProjects:fieldList" update="metadataPanelGrid02" styleClass="searchIcon" />
+														<br /> <br />
+													</div>
+													<p:dataTable paginatorPosition="bottom" id="availabelMetadatas" var="metadata" value="#{managerContextView.metadataList}" paginator="true"
+														rows="5" rowKey="#{metadata.name}" selection="#{managerContextView.metadataSelected}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_METADATA_FOUND']}">
+														<f:facet name="header">Metadados</f:facet>
+														<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onMeadataSelected}" oncomplete="PF('metadataCreateWindow').show()" update=":managerContextForm:metadataCreateModal" />
+														<p:column headerText="#{translator['LABEL_NAME']}">
+															<h:outputText value="#{metadata.name}" />
+														</p:column>
+														<f:facet name="footer">#{translator['LABEL_TOTAL_REGISTERS']} #{managerContextView.metadataList.size()}</f:facet>
+													</p:dataTable>
+												</p:column>
+											</h:panelGrid>
+										</p:tab>
+										<p:tab id="tabLayers" title="&nbsp;&nbsp;&nbsp;#{translator['LABEL_LAYERS']}&nbsp;&nbsp;" rendered="#{not empty managerContextView.entitySelected}" titleStyleClass="layerTitle">
+											<h:panelGrid columns="1" cellpadding="5" id="layerPanelGrid02">
+	
+												<p:dataTable paginatorPosition="bottom" id="availabelLayers" var="layer" value="#{managerContextView.projectLayersDisassociated}"
+													paginator="true" rows="5" rowKey="#{layer.id}" selection="#{managerContextView.layerToDetail}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}">
+													<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onSelectLayer}" oncomplete="PF('layerCreateWindow').show()" update=":managerContextForm:layerCreateModal" />
+													<f:facet name="header">#{translator['LABEL_LAYERS_AVAILABLE']}</f:facet>
+	
+													<p:column style="width:20px">
+														<p:commandLink action="#{managerContextView.associateLayer}" update=":managerContextForm:tabViewProjects:availabelLayers :managerContextForm:selectedLayersTable" ajax="true">
+															<div align="center">
+																<h:graphicImage value="/resources/img/link.png" />
+																<f:setPropertyActionListener target="#{managerContextView.layerSelected}" value="#{layer}" />
+															</div>
+														</p:commandLink>
+													</p:column>
+	
+													<p:column headerText="#{translator['LABEL_NAME']}" filterBy="#{layer.name}" filterMatchMode="contains" filterStyle="width: 200px!important;" >
+														<h:outputText value="#{layer.name}" />
+													</p:column>
+	
+												</p:dataTable>
+	
+											</h:panelGrid>
+										</p:tab>
+									</p:tabView>
+	
+									<p:dataTable paginatorPosition="bottom" id="selectedLayersTable" var="layer" value="#{managerContextView.projectLayersAssociated}" 
+												 paginator="true" rows="8" rowKey="#{layer.id}" selection="#{managerContextView.layerToDetail}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}">
+										<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onSelectLayer}" oncomplete="PF('layerCreateWindow').show()" update=":managerContextForm:layerCreateModal" />
+										<f:facet name="header">#{translator['LABEL_LAYERS_SELECTED']}</f:facet>
+	
+										<p:column style="width:20px">
+											<div align="center">
+												<p:commandLink action="#{managerContextView.disassociateLayer}" ajax="true" update=":managerContextForm:tabViewProjects:availabelLayers :managerContextForm:selectedLayersTable">
+													<h:graphicImage value="/resources/img/remove.png" width="19px;" height="15px;" />
+													<f:setPropertyActionListener target="#{managerContextView.layerSelected}" value="#{layer}" />
+												</p:commandLink>
+											</div>
+										</p:column>
+	
+										<p:column headerText="#{translator['LABEL_NAME']}" filterBy="#{layer.name}" filterMatchMode="contains" filterStyle="width: 200px!important;" >
+											<h:graphicImage value="/resources/img/layer.png" height="18px" width="18px" rendered="#{empty layer.metadataCode}" /> 
+											<h:graphicImage value="/resources/img/metadata.png" height="18px" width="18px" rendered="#{not empty layer.metadataCode}" /> &nbsp;
+											<h:outputText value="#{layer.name}" />
+										</p:column>
+									</p:dataTable>
+								</h:panelGrid>
+							</h:panelGrid>
+						</div>     
+				    </p:dialog> 
+					<!-- ### ### ### ### ### ### ### ### ### ### ###-->
+					<!-- ### ### DETALHES DA CAMADA ### ### ###-->
+					<p:dialog closeOnEscape="true" id="layerCreateModal" header="#{managerContextView.layerToDetail.name}" widgetVar="layerCreateWindow" showEffect="fade" hideEffect="fade" modal="true" height="45%" width="50%" onHide="">
+						<div align="left">
+							<h:panelGrid id="layerDisplay" columns="2" cellpadding="4" rendered="#{empty managerContextView.layerToDetail.metadataCode}"> 
+								<h:outputText value="#{translator['LABEL_CODE']}:" />
+				            	<h:outputText value="#{managerContextView.layerToDetail.code}" />
+				            	
+								<h:outputText value="#{translator['LABEL_DESCRIPTION']}:" />
+				            	<h:outputText value="#{managerContextView.layerToDetail.description}" />
+				            	
+								<h:outputText value="#{translator['LABEL_LAYER_TYPE']}:" />
+				            	<h:outputText value="#{managerContextView.layerToDetail.typeLayerLabel()}" />
+				            	
+								<h:outputText value="#{translator['LABEL_PROJECTION']}:" />
+				            	<h:outputText value="#{managerContextView.layerToDetail.projection}" />
+				            	
+								<h:outputText value="#{translator['LABEL_URL']}:" />
+				            	<h:outputText value="#{managerContextView.layerToDetail.url}" />
+				            	
+								<h:outputText value="#{translator['LABEL_BBOX']}:" />
+				            	<h:outputText value="#{managerContextView.layerToDetail.bbox}" />
+				            	
+					        </h:panelGrid>
+					        
+							<h:panelGrid id="layerDisplayMetadata" columns="1" cellpadding="4" rendered="#{not empty managerContextView.layerToDetail.metadataCode}">
+					        	<div align="left">
+								
+									<h:panelGrid id="label_data02" columns="2" cellpadding="4">
+								 
+										<h:outputText value="#{translator['LABEL_CODE']}:" />
+						            	<h:outputText value="#{managerContextView.metadataSelected.code}" />
+						            	
+						            	<h:outputText value="#{translator['LABEL_ABSTRACT']}:" />
+						            	<h:outputText value="#{managerContextView.metadataSelected.description}" />
+						            	
+						            	<h:outputText value="#{translator['LABEL_METADATA_NAME']}:" />
+						            	<h:outputText value="#{managerContextView.metadataSelected.metadataStandardName}" />
+						            	
+						            	<h:outputText value="#{translator['LABEL_METADATA_VERSION']}:" />
+						            	<h:outputText value="#{managerContextView.metadataSelected.metadataStandardVersion}" />
+						            	
+						            	<h:outputText value="#{translator['LABEL_LANGUAGE']}:" />
+						            	<h:outputText value="#{managerContextView.metadataSelected.language}" />
+						            	
+						            	<h:outputText value="#{translator['LABEL_DATE']}:" />
+						            	<h:outputText value="#{managerContextView.metadataSelected.getDateFormated()}" />
+		
+							        </h:panelGrid>
+							        
+							        <p:dataTable id="metadataWmsUrlTable02" var="wmsUrl" value="#{managerContextView.metadataSelected.wmsUrls}" rendered="#{not empty managerContextView.metadataSelected.wmsUrls}">
+						            	<f:facet name="header">#{translator['LABEL_WMS_LAYERS']}</f:facet>
+		
+										<p:column headerText="#{translator['LABEL_URL']}">
+						                    <h:outputText value="#{wmsUrl.url}" />
+						                </p:column>
+						                
+						            </p:dataTable>
+							        <br />
+							        <h:panelGrid id="boundingBoxGrid02" columns="3" cellpadding="4" width="100%;">
+							        
+						            	<h:outputText value="" />
+						            	<h:outputText value="North Bounding Latitude [ #{managerContextView.metadataSelected.northBoundLatitude} ]" />
+						            	<h:outputText value="" />
+						            	
+						            	<h:outputText value="West Bounding Latitude [ #{managerContextView.metadataSelected.westBoundLatitude} ]" />
+						            	<h:outputText value="" />
+						            	<h:outputText value="East Bounding Latitude [ #{managerContextView.metadataSelected.eastBoundLatitude} ]" />
+						            	
+						            	<h:outputText value="" />
+						            	<h:outputText value="South Bounding Latitude [ #{managerContextView.metadataSelected.southBoundLatitude} ]" />
+						            	<h:outputText value="" />
+						            	
+						            </h:panelGrid>
+						            <br />
+						            <p:dataTable id="metadataContactTable02" var="contact" value="#{managerContextView.metadataSelected.contacts}" rendered="#{not empty managerContextView.metadataSelected.contacts}" 
+						            	paginator="true" rows="3" paginatorPosition="bottom">
+						            	<f:facet name="header">#{translator['LABEL_CONTACT']}</f:facet>
+		
+										<p:column headerText="#{translator['LABEL_ORGANIZATION_NAME']}">
+						                    <h:outputText value="#{contact.organizationName}" />
+						                </p:column>
+										<p:column headerText="#{translator['LABEL_FUNCTION']}">
+						                    <h:outputText value="#{contact.functionName}" />
+						                </p:column>
+						                
+						            </p:dataTable>
+						            
+							    </div>
+					        </h:panelGrid>
+					    </div>
+				    </p:dialog> 
+					<!-- ### ### ### ### ### ### ### ### ### ### ### ###-->
+					<!-- ### ### DETALHES DO SERVICO EXTERNO ### ### ###-->
+					<p:dialog closeOnEscape="true" id="externalCreateModal" header="#{managerContextView.externalToDetail.name}" widgetVar="externalCreateWindow" showEffect="fade" hideEffect="fade" modal="true" height="35%" width="45%" onHide="">
+						<div align="left">
+							<h:panelGrid id="externalDisplay" columns="2" cellpadding="4"> 
+								<h:outputText value="#{translator['LABEL_URL']}:" />
+				            	<h:outputText value="#{managerContextView.externalToDetail.url}" />
+								<h:outputText value="#{translator['LABEL_PROJECTION']}:" />
+				            	<h:outputText value="#{managerContextView.externalToDetail.projection}" />
+					        </h:panelGrid>
+					    </div>
+				    </p:dialog> 
+					<!-- ### ### ### ### ### ### ### ### ### ### ###-->
+					<!-- ### ### ### DETALHES DO PLUGIN  ### ### ###-->
+					<p:dialog closeOnEscape="true" id="pluginCreateModal" header="#{managerContextView.pluginToDetail.text}" widgetVar="pluginCreateWindow" showEffect="fade" hideEffect="fade" modal="true" height="55%" width="45%" onHide="">
+						<div align="left">
+							<h:panelGrid id="pluginDisplay" columns="2" cellpadding="4" style="width: 100%!important;"> 
+								<h:outputText value="#{translator['LABEL_CONTENT']}:" style="width: 25%;" />
+				            	<h:outputText value="#{managerContextView.pluginToDetail.content}" style="height: 150px!important; overflow-y: scroll; display:block!important; width: 100%!important;" />
+				            	
+								<h:outputText value="#{translator['LABEL_MOBILE_CONTENT']}:" style="width: 25%;" />
+				            	<h:outputText value="#{managerContextView.pluginToDetail.mobileContent}" style="height: 150px!important; overflow-y: scroll; display:block!important; width: 100%!important;" />
+				            	
+								<h:outputText value="#{translator['LABEL_JAVASCRIPT']}:" style="width: 25%;" />
+				            	<h:outputText value="#{managerContextView.pluginToDetail.js}" />
+				            	
+								<h:outputText value="#{translator['LABEL_LOCAL']}:" style="width: 25%;" />
+				            	<h:outputText value="#{managerContextView.pluginToDetail.local}" />
+					        </h:panelGrid>
+					    </div>
+				    </p:dialog> 
+					<!-- ### ### ### ### ### ### ### ### ### ### ###-->
+					<!-- ### ### ### DETALHES DO BASELAYER # ### ###-->
+					<p:dialog closeOnEscape="true" id="baseLayerCreateModal" header="#{managerContextView.baseLayerToDetail.name}" widgetVar="baseLayerCreateWindow" showEffect="fade" hideEffect="fade" modal="true" height="35%" width="45%" onHide="">
+						<div align="left">
+							<h:panelGrid id="baseLayerDisplay" columns="2" cellpadding="4"> 
+								<h:outputText value="#{translator['LABEL_SCRIPT']}:" />
+				            	<h:outputText value="#{managerContextView.baseLayerToDetail.script}" />
+					        </h:panelGrid>
+					    </div>
+				    </p:dialog> 
+					<!-- ### ### ### ### ### ### ### ### ### ### ###-->
+					<!-- ### ### ## DETALHES METADADO ## ### ### ###-->
+					<p:dialog closeOnEscape="true" id="metadataCreateModal" header="#{managerContextView.metadataSelected.name}" widgetVar="metadataCreateWindow" showEffect="fade" hideEffect="fade" modal="true" height="45%" width="50%" onHide="" >
+						<p:messages id="dialogMessage" showDetail="false" autoUpdate="true" closable="true"  />
+						<div align="left">
+							<h:panelGrid id="metadataDisplay" columns="1" cellpadding="4">
+							
+								<h:panelGrid id="label_data" columns="2" cellpadding="4">
+							 
+									<h:outputText value="#{translator['LABEL_CODE']}:" />
+					            	<h:outputText value="#{managerContextView.metadataSelected.code}" />
+					            	
+					            	<h:outputText value="#{translator['LABEL_ABSTRACT']}:" />
+					            	<h:outputText value="#{managerContextView.metadataSelected.description}" />
+					            	
+					            	<h:outputText value="#{translator['LABEL_METADATA_NAME']}:" />
+					            	<h:outputText value="#{managerContextView.metadataSelected.metadataStandardName}" />
+					            	
+					            	<h:outputText value="#{translator['LABEL_METADATA_VERSION']}:" />
+					            	<h:outputText value="#{managerContextView.metadataSelected.metadataStandardVersion}" />
+					            	
+					            	<h:outputText value="#{translator['LABEL_LANGUAGE']}:" />
+					            	<h:outputText value="#{managerContextView.metadataSelected.language}" />
+					            	
+					            	<h:outputText value="#{translator['LABEL_DATE']}:" />
+					            	<h:outputText value="#{managerContextView.metadataSelected.getDateFormated()}" />
+	
+						        </h:panelGrid>
+						        
+						        <p:dataTable id="metadataWmsUrlTable" var="wmsUrl" value="#{managerContextView.metadataSelected.wmsUrls}" rendered="#{not empty managerContextView.metadataSelected.wmsUrls}">
+					            	<f:facet name="header">#{translator['LABEL_WMS_LAYERS']}</f:facet>
+	
+									<p:column style="width:20px">
+					                    <p:commandLink process="@this" action="#{managerContextView.associateMetadataLayer}" update=":managerContextForm:selectedLayersTable :crudThemeForm:selectedLayersTable" ajax="true" title="Associar camada ao projeto: #{managerContextView.projectToDetail.name}">
+											<div align="center">
+						                		<h:graphicImage value="/resources/img/link.png" />
+						                		<f:setPropertyActionListener target="#{managerContextView.wmsUrlSelected}" value="#{wmsUrl}" />
+											</div>
+										</p:commandLink>
+					                </p:column>
+					                
+									<p:column headerText="#{translator['LABEL_URL']}">
+					                    <h:outputText value="#{wmsUrl.url}" />
+					                </p:column>
+					                
+					            </p:dataTable>
+						        <br />
+						        <h:panelGrid id="boundingBoxGrid" columns="3" cellpadding="4" width="100%;">
+						        
+					            	<h:outputText value="" />
+					            	<h:outputText value="North Bounding Latitude [ #{managerContextView.metadataSelected.northBoundLatitude} ]" />
+					            	<h:outputText value="" />
+					            	
+					            	<h:outputText value="West Bounding Latitude [ #{managerContextView.metadataSelected.westBoundLatitude} ]" />
+					            	<h:outputText value="" />
+					            	<h:outputText value="East Bounding Latitude [ #{managerContextView.metadataSelected.eastBoundLatitude} ]" />
+					            	
+					            	<h:outputText value="" />
+					            	<h:outputText value="South Bounding Latitude [ #{managerContextView.metadataSelected.southBoundLatitude} ]" />
+					            	<h:outputText value="" />
+					            	
+					            </h:panelGrid>
+					            <br />
+					            <p:dataTable id="metadataContactTable" var="contact" value="#{managerContextView.metadataSelected.contacts}" rendered="#{not empty managerContextView.metadataSelected.contacts}" 
+					            	paginator="true" rows="3" paginatorPosition="bottom">
+					            	<f:facet name="header">#{translator['LABEL_CONTACT']}</f:facet>
+	
+									<p:column headerText="#{translator['LABEL_ORGANIZATION_NAME']}">
+					                    <h:outputText value="#{contact.organizationName}" />
+					                </p:column>
+									<p:column headerText="#{translator['LABEL_FUNCTION']}">
+					                    <h:outputText value="#{contact.functionName}" />
+					                </p:column>
+					                
+					            </p:dataTable>
+					            
+					        </h:panelGrid>
+					    </div>
+				    </p:dialog> 
+					<!-- ### ### ### ### ### ### ### ### ### ### ###-->
+				</div>
+				<br />
+			</h:form>
+			<!-- ######################### -->  
+   			<!-- DIALOG CREATE NEW CONTEXT -->
+			<p:dialog closeOnEscape="true" id="entityCreateModal" header="#{translator['LABEL_CONTEXT']}" widgetVar="entityCreateWindow" modal="true" showEffect="fade" hideEffect="fade" height="35%" width="35%">
+				<h:form id="crudForm">
+					&nbsp;<h:outputLabel for="contextTitle" value="#{translator['LABEL_TITLE']}" />&nbsp;&nbsp;
+					<h:message for="contextTitle" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+					<p:inputText id="contextTitle" value="#{managerContextView.entity.title}" styleClass="inputValue" validatorMessage="#{translator['MESSAGE_FIELD_REQUIRED']} #{translator['MESSAGE_MAX_LENGTH_IN_CHARACTERS']} 100" >
+						<f:validateRequired />
+						<f:validateLength maximum="100" />
+					</p:inputText><br /><br /><br />
+					&nbsp;<h:outputLabel for="contextColorMenu" value="#{translator['LABEL_MENU_COLOR']}" />&nbsp;&nbsp;&nbsp;
+					<p:colorPicker id="contextColorMenu" value="#{managerContextView.entity.colorMenu}" />&nbsp;&nbsp;
+					<h:message for="contextColorMenu" style="color: red; font-size: 11px; font-weight: bold;" /><br /><br />
+					&nbsp;<h:outputLabel for="contextColorBackground" value="#{translator['LABEL_BACKGROUND_COLOR']}" />&nbsp;&nbsp;
+					<p:colorPicker id="contextColorBackground" value="#{managerContextView.entity.colorBackground}"/>&nbsp;&nbsp;
+					<h:message for="contextColorBackground" style="color: red; font-size: 11px; font-weight: bold;" /><br /><br />
+					<br />
+					<h:inputHidden id="id" value="#{managerContextView.entity.id}" />
+					<br />
+					<p:commandButton value="#{translator['LABEL_SAVE']}" update=":managerContextForm :managerContextForm:messages" id="saveButton" actionListener="#{managerContextView.saveOrUpdateEntity}" styleClass="ui-priority-primary" />
+				</h:form>
+			</p:dialog>
+			<!-- ######################### -->  
+   			<!-- DIALOG CREATE NEW PLUGIN -->
+			<p:dialog closeOnEscape="true" id="entityCreatePluginModal" header="#{translator['LABEL_PLUGIN']}" widgetVar="entityCreatePluginWindow" modal="true" showEffect="fade" hideEffect="fade" height="45%" width="45%">
+				<h:form id="crudPluginForm">
+					&nbsp;<h:outputLabel for="pluginNome" value="#{translator['LABEL_TEXT']}" />&nbsp;&nbsp;
+					<h:message for="pluginNome" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+					<p:inputText id="pluginNome" value="#{managerContextView.pluginToPersist.text}" styleClass="inputValue" validatorMessage="#{translator['MESSAGE_FIELD_REQUIRED']} #{translator['MESSAGE_MAX_LENGTH_IN_CHARACTERS']} 500.">
+						<f:validateRequired />
+						<f:validateLength maximum="500" />
+					</p:inputText><br /><br />
+					&nbsp;<h:outputLabel for="pluginContent" value="#{translator['LABEL_CONTENT']}" />&nbsp;&nbsp;
+					<h:message for="pluginContent" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+					<p:inputTextarea id="pluginContent" value="#{managerContextView.pluginToPersist.content}" styleClass="inputValue" rows="8" autoResize="false" validatorMessage="#{translator['MESSAGE_MAX_LENGTH_IN_CHARACTERS']} 2500." >
+						<f:validateLength maximum="2500" />
+					</p:inputTextarea><br /><br />
+					&nbsp;<h:outputLabel for="pluginCntMobile" value="#{translator['LABEL_MOBILE_CONTENT']}" />&nbsp;&nbsp;
+					<h:message for="pluginCntMobile" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+					<p:inputTextarea id="pluginCntMobile" value="#{managerContextView.pluginToPersist.mobileContent}" styleClass="inputValue" rows="8" autoResize="false" validatorMessage="#{translator['MESSAGE_MAX_LENGTH_IN_CHARACTERS']} 2500.">
+						<f:validateLength maximum="2500" />
+					</p:inputTextarea><br /><br /><br />
+					&nbsp;<h:outputLabel for="pluginJsFile" value="#{translator['LABEL_JAVASCRIPT']}" />&nbsp;&nbsp;
+					<h:message for="pluginJsFile" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+					<p:inputText id="pluginJsFile" value="#{managerContextView.pluginToPersist.js}" styleClass="inputValue" validatorMessage="#{translator['MESSAGE_MAX_LENGTH_IN_CHARACTERS']} 100.">
+						<f:validateLength maximum="100" />
+					</p:inputText><br /><br />
+					&nbsp;<h:outputLabel for="pluginUrl" value="#{translator['LABEL_LOCAL']}" />&nbsp;&nbsp;
+					<h:message for="pluginUrl" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+					<p:inputText id="pluginUrl" value="#{managerContextView.pluginToPersist.local}" styleClass="inputValue" validatorMessage="#{translator['MESSAGE_MAX_LENGTH_IN_CHARACTERS']} 100." >
+						<f:validateLength maximum="250" />
+					</p:inputText><br /><br />
+					<h:inputHidden id="id" value="#{managerContextView.pluginToPersist.id}" />
+					<br />
+					<p:commandButton value="#{translator['LABEL_SAVE']}" update=":managerContextForm:tabView :crudPluginForm :managerContextForm:messages" id="savePluginButton" actionListener="#{managerContextView.savePlugin}" styleClass="ui-priority-primary" />
+				</h:form>
+			</p:dialog>
+			<!-- ########################### -->
+			<!-- ########################### -->  
+   			<!-- DIALOG CREATE NEW BASELAYER -->
+			<p:dialog closeOnEscape="true" id="entityCreateBaselayerModal" header="#{translator['LABEL_BASELAYER']}" widgetVar="entityCreateBaselayerWindow" modal="true" showEffect="fade" hideEffect="fade" height="45%" width="45%">
+				<h:form id="crudBaselayerForm">
+					&nbsp;<h:outputLabel for="baseLayerName" value="#{translator['LABEL_NAME']} " />&nbsp;&nbsp;
+					<h:message for="baseLayerName" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+					<p:inputText id="baseLayerName" value="#{managerContextView.baseLayerToPersist.name}" styleClass="inputValue" validatorMessage="#{translator['MESSAGE_FIELD_REQUIRED']} #{translator['MESSAGE_MAX_LENGTH_IN_CHARACTERS']} 50." >
+						<f:validateRequired />
+						<f:validateLength maximum="50" />
+					</p:inputText><br /><br />
+					<p:fieldset legend="#{translator['LABEL_SCRIPT']} " toggleable="true" toggleSpeed="500" collapsed="true">
+						<h:message for="baseLayerScript" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+						<p:inputTextarea id="baseLayerScript" value="#{managerContextView.baseLayerToPersist.script}" styleClass="inputValue" rows="8" autoResize="false" validatorMessage="#{translator['MESSAGE_MAX_LENGTH_IN_CHARACTERS']} 400.">
+							<f:validateLength maximum="400" />
+						</p:inputTextarea><br /><br />
+					</p:fieldset>
+					<br />
+					<h:inputHidden id="id" value="#{managerContextView.baseLayerToPersist.id}" />
+					<br />
+					<p:commandButton value="#{translator['LABEL_SAVE']}" update=":managerContextForm:tabView :crudBaselayerForm :managerContextForm:messages" id="saveBaseLayerButton" actionListener="#{managerContextView.saveBaseLayer}" styleClass="ui-priority-primary" />
+				</h:form>
+			</p:dialog>
+			<!-- ######################### -->
+			<!-- ########################### -->  
+   			<!-- DIALOG CREATE NEW EXTERNAL SERVICE -->
+			<p:dialog closeOnEscape="true" id="entityCreateExternalServiceModal" header="#{translator['LABEL_EXTERNAL_SERVICE']}" widgetVar="entityCreateExternalServiceWindow" modal="true" showEffect="fade" hideEffect="fade" height="45%" width="45%">
+				<h:form id="crudExternalServiceForm">
+					&nbsp;<h:outputLabel for="externalServiceName" value="#{translator['LABEL_NAME']}" />&nbsp;&nbsp;
+					<h:message for="externalServiceName" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+					<p:inputText id="externalServiceName" value="#{managerContextView.externalToPersist.name}" styleClass="inputValue" validatorMessage="#{translator['MESSAGE_FIELD_REQUIRED']} #{translator['MESSAGE_MAX_LENGTH_IN_CHARACTERS']} 250.">
+						<f:validateRequired/>
+						<f:validateLength maximum="250" />
+					</p:inputText><br /><br />
+					&nbsp;<h:outputLabel for="externalServiceProjection" value="#{translator['LABEL_PROJECTION']}" />&nbsp;&nbsp;
+					<h:message for="externalServiceProjection" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+					<p:inputMask mask="9?99999" id="externalServiceProjection" value="#{managerContextView.externalToPersist.projection}" styleClass="inputValue" validatorMessage="#{translator['MESSAGE_EXPECTED_DIGITS_MAX_6']}" /><br /><br />
+					&nbsp;<h:outputLabel for="externalServiceURL" value="#{translator['LABEL_URL']}" />&nbsp;&nbsp;
+					<h:message for="externalServiceURL" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+					<p:inputText id="externalServiceURL" value="#{managerContextView.externalToPersist.url}" styleClass="inputValue" validatorMessage="#{translator['MESSAGE_MAX_LENGTH_IN_CHARACTERS']} 500." /><br /><br />
+					<h:inputHidden id="id" value="#{externalServiceView.entity.id}" />
+					<br />
+					<p:commandButton value="#{translator['LABEL_SAVE']}" update=":managerContextForm:tabView :crudExternalServiceForm :managerContextForm:messages" id="saveExternalServiceButton" actionListener="#{managerContextView.saveExternalService}" styleClass="ui-priority-primary" />
+				</h:form>
+			</p:dialog>
+			<!-- ######################### -->
+			<!-- ######################### -->  
+   			<!--  DIALOG CREATE NEW THEME  -->
+			<p:dialog closeOnEscape="true" id="entityCreateThemeModal" header="#{translator['LABEL_THEME']}" widgetVar="entityCreateThemeWindow" showEffect="fade" hideEffect="fade" modal="true" height="70%" width="70%" onHide="">
+				<h:form id="crudThemeForm">	
+					&nbsp;<h:outputLabel for="projectNome" value="#{translator['LABEL_NAME']}"/>&nbsp;&nbsp;
+					<h:message for="projectNome" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+					<p:inputText id="projectNome" value="#{managerContextView.themeToPersist.name}" styleClass="inputValue" validatorMessage="#{translator['MESSAGE_FIELD_REQUIRED']} #{translator['MESSAGE_MAX_LENGTH_IN_CHARACTERS']} 250" >
+						<f:validateRequired />
+						<f:validateLength maximum="250"/>
+					</p:inputText><br /><br />
+					&nbsp;<h:outputLabel for="projectParent" value="#{translator['LABEL_PARENT_PROJECT']}" />&nbsp;&nbsp;
+					<h:message for="projectParent" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+					<p:autoComplete id="projectParent" value="#{managerContextView.themeToPersist.parentProject}" completeMethod="#{managerContextView.filterProjects}"
+	                        		var="parentProjectVar" itemLabel="#{parentProjectVar.name}" itemValue="#{parentProjectVar}" converter="#{projectView}" 
+	                        		forceSelection="true" styleClass="ui-autocomplete" scrollHeight="150"/><br /><br />
+					<div align="left">
+						<h:panelGrid columns="1" cellpadding="4">
+							<h:panelGrid columns="2" cellpadding="5">
+								<p:tabView id="crudThemetabViewProjects" widgetVar="crudThemetabViewProjects" effect="fade" effectDuration="normal">
+									<p:tab id="tabMetadataLayers" title="&nbsp;&nbsp;&nbsp;#{translator['LABEL_METADATAS']}&nbsp;&nbsp;" rendered="#{not empty managerContextView.themeToPersist}" titleStyleClass="metadataTitle">
+										<h:panelGrid columns="1" cellpadding="5" id="metadataCrudThemePanelGrid02">
+											<p:column id="metadataColumn">
+												<div align="center">
+													<br />
+													<p:outputLabel for="serverList" value="#{translator['LABEL_SERVER']}: " style="margin-bottom: 15px;" />
+													<p:selectOneMenu id="serverList" value="#{managerContextView.serverSelected}">
+														<f:selectItem itemLabel="DataGEO" itemValue="DataGEO" />
+													</p:selectOneMenu>
+													<br />
+													<p:outputLabel for="fieldList" value="#{translator['LABEL_FIELDS']}:  " style="margin-bottom: 15px;" />
+													<p:selectOneMenu id="fieldList" value="#{managerContextView.fieldSelected}">
+														<f:selectItem itemLabel="#{translator['LABEL_ALL']}" itemValue="anytext" />
+														<f:selectItem itemLabel="#{translator['LABEL_TITLE']}" itemValue="title" />
+														<f:selectItem itemLabel="#{translator['LABEL_SUBJECT']}" itemValue="subject" />
+													</p:selectOneMenu>
+													<br />
+													<p:inputText id="searchText" value="#{managerContextView.searchText}" />
+													&nbsp;
+													<p:commandButton value="&nbsp;" id="searchButton" actionListener="#{managerContextView.sendCswRequest}" process="@this fieldList searchText"  update="metadataCrudThemePanelGrid02" ajax="true" styleClass="searchIcon" />
+													<br /> <br />
+												</div>
+												<p:dataTable paginatorPosition="bottom" id="availabelMetadatas" var="metadata" value="#{managerContextView.metadataList}" paginator="true"
+													rows="5" rowKey="#{metadata.name}" selection="#{managerContextView.metadataSelected}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_METADATA_FOUND']}">
+													<f:facet name="header">#{translator['LABEL_METADATAS']}</f:facet>
+													<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onMeadataSelected}" oncomplete="PF('metadataCreateWindow').show()" update=":managerContextForm:metadataCreateModal" />
+													<p:column headerText="#{translator['LABEL_NAME']}">
+														<h:outputText value="#{metadata.name}" />
+													</p:column>
+													<f:facet name="footer">#{translator['LABEL_TOTAL_REGISTERS']} #{managerContextView.metadataList.size()}</f:facet>
+												</p:dataTable>
+											</p:column>
+										</h:panelGrid>
+									</p:tab>
+									<p:tab id="tabLayers" title="&nbsp;&nbsp;&nbsp;#{translator['LABEL_LAYERS']}&nbsp;&nbsp;" rendered="#{not empty managerContextView.themeToPersist}" titleStyleClass="layerTitle">
+										<h:panelGrid columns="1" cellpadding="5" id="layerPanelGrid02">
+		
+											<p:dataTable paginatorPosition="bottom" id="availabelLayers" var="layer" value="#{managerContextView.projectLayersDisassociated}"
+												paginator="true" rows="5" rowKey="#{layer.id}" selection="#{managerContextView.layerToDetail}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}">
+												<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onSelectLayer}" oncomplete="PF('layerCreateWindow').show()" update=":managerContextForm:layerCreateModal" />
+												<f:facet name="header">#{translator['LABEL_LAYERS_AVAILABLE']}</f:facet>
+		
+												<p:column style="width:20px">
+													<p:commandLink action="#{managerContextView.associateLayer}" update=":crudThemeForm:crudThemetabViewProjects:availabelLayers :crudThemeForm:selectedLayersTable" ajax="true">
+														<div align="center">
+															<h:graphicImage value="/resources/img/link.png" />
+															<f:setPropertyActionListener target="#{managerContextView.layerSelected}" value="#{layer}" />
+														</div>
+													</p:commandLink>
+												</p:column>
+		
+												<p:column headerText="#{translator['LABEL_NAME']}" filterBy="#{layer.name}" filterMatchMode="contains" filterStyle="width: 200px!important;" >
+													<h:outputText value="#{layer.name}" />
+												</p:column>
+		
+											</p:dataTable>
+		
+										</h:panelGrid>
+									</p:tab>
+								</p:tabView>
+		
+								<p:dataTable paginatorPosition="bottom" id="selectedLayersTable" var="layer" value="#{managerContextView.projectLayersAssociated}" 
+											 paginator="true" rows="8" rowKey="#{layer.id}" selection="#{managerContextView.layerToDetail}" selectionMode="single" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}">
+									<p:ajax event="rowSelect" process="@this" listener="#{managerContextView.onSelectLayer}" oncomplete="PF('layerCreateWindow').show()" update=":managerContextForm:layerCreateModal" />
+									<f:facet name="header">#{translator['LABEL_LAYERS_SELECTED']}</f:facet>
+		
+									<p:column style="width:20px">
+									
+										<div align="center">
+											<p:commandLink action="#{managerContextView.disassociateLayer}" ajax="true" update=":crudThemeForm:crudThemetabViewProjects:availabelLayers :crudThemeForm:selectedLayersTable">
+												<h:graphicImage value="/resources/img/remove.png" width="19px;" height="15px;" />
+												<f:setPropertyActionListener target="#{managerContextView.layerSelected}" value="#{layer}" />
+											</p:commandLink>
+										</div>
+									</p:column>
+		
+									<p:column headerText="#{translator['LABEL_NAME']}" filterBy="#{layer.name}" filterMatchMode="contains" filterStyle="width: 200px!important;" >
+										<h:graphicImage value="/resources/img/layer.png" height="18px" width="18px" rendered="#{empty layer.metadataCode}" /> 
+										<h:graphicImage value="/resources/img/metadata.png" height="18px" width="18px" rendered="#{not empty layer.metadataCode}" /> &nbsp;
+										<h:outputText value="#{layer.name}" />
+									</p:column>
+								</p:dataTable>
+							</h:panelGrid>
+						</h:panelGrid>
+			
+					    <!-- ################# CAMADAS ###################### -->
+						<h:inputHidden id="id" value="#{managerContextView.themeToPersist.id}" />
+						<br />
+					</div>
+					<p:commandButton value="#{translator['LABEL_SAVE']}" update=":crudThemeForm :managerContextForm:tabView :managerContextForm:themeTree :managerContextForm:messages" id="saveButton" actionListener="#{managerContextView.saveTheme}" styleClass="ui-priority-primary" />
+			
+	    		</h:form>	
+			</p:dialog>
+		<!-- ### ### ### ### ### ### ### ### ### ### ###-->
+		</div>
+		<div style="height: 50px;"/>
+	</f:view>
+</h:body>
+</html>

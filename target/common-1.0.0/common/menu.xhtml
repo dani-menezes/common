@@ -1,0 +1,31 @@
+<div style="border-top-color: white !important;" align="center" xmlns:p="http://primefaces.org/ui">
+	<p:dock position="top" proximity="35" itemWidth="40"  style="border-top-color: white !important;" xmlns:p="http://primefaces.org/ui"> 
+		<p:menuitem value="#{translator['LABEL_CONTENT']}" icon="/resources/img/context.png" url="/common/managerContextTab.xhtml" style="font-color: #FFFFFF; font-weigh: bold;font-size: 101%;"/>
+		<p:menuitem value="#{translator['LABEL_THEMES']}" icon="/resources/img/theme.gif" url="/pages/project.xhtml" style="font-color: #FFFFFF; font-weigh: bold;font-size: 101%;"/>
+		<p:menuitem value="#{translator['LABEL_EXTERNAL_SERVICES']}" icon="/resources/img/external.png" url="/pages/externalService.xhtml" style="font-color: #FFFFFF; font-weigh: bold;font-size: 101%;" />
+		<p:menuitem value="#{translator['LABEL_PLUGINS']}" icon="/resources/img/plugin.png" url="/pages/plugin.xhtml" style="font-color: #FFFFFF; font-weigh: bold;font-size: 101%;"/>
+		<p:menuitem value="#{translator['LABEL_BASELAYERS']}" icon="/resources/img/baseLayer.png" url="/pages/baseLayer.xhtml" style="font-color: #FFFFFF; font-weigh: bold;font-size: 101%;"/>
+	</p:dock>
+	<h:form id="changeLocaleForm" style="border-top-color: #616161 !important;" xmlns:h="http://java.sun.com/jsf/html">
+		<p:panelGrid columns="2" style="width: 100%!important; border-top-color: #616161 !important;">
+			<p:column style="border-top-color: #616161 !important;">
+				<div align="left" style="border-top-color: #616161 !important;">
+					<h:selectOneMenu id="changeLocaleSelect" widgetVar="changeLocaleSelect" value="#{commonTranslator.localeParam}" style="width: 105px!important; margin-top:2px; " xmlns:f="http://java.sun.com/jsf/core" xmlns:p="http://primefaces.org/ui">
+						<f:selectItem itemValue="pt" itemLabel="Português" />
+						<f:selectItem itemValue="en" itemLabel="English"  />
+						<f:selectItem itemValue="es" itemLabel="Español" />
+						<p:ajax event="change" process="@this" listener="#{commonTranslator.localeChanged()}" update="@all" immediate="true"/>
+					</h:selectOneMenu>
+				</div>
+			</p:column>
+			<p:column style="border-top-color: #616161 !important; font-weight:bold;">
+				<div align="right" style="border-top-color: #616161 !important;">
+					<p:outputLabel value="#{commonAuthentication.user.name}  "  /> 
+					<p:graphicImage url="/resources/img/user.png" width="20px" style="margin-top:5px;"/>
+					<p:outputLabel value="  "  />
+					<p:commandButton value="#{translator['LABEL_EXIT']}" immediate="true" update="@all" id="exitButton" actionListener="#{commonAuthentication.logOut()}" oncomplete="window.location = '#{commonAuthentication.getLoginUrl()}';" styleClass="ui-priority-primary" style="margin-right:17px;" xmlns:p="http://primefaces.org/ui"/>
+				</div>
+			</p:column>
+		</p:panelGrid>
+	</h:form>
+</div>

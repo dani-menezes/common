@@ -1,0 +1,12 @@
+core\service\RoleService.class
+core\common\CommonView.class
+core\common\AbstractCommonService.class
+core\common\CommonAuthentication.class
+core\common\exception\CommonException.class
+core\common\AbstractCommonView.class
+core\common\CommonService.class
+core\service\CommonUserService.class
+core\model\CommonUser.class
+core\internationalization\CommonTranslator.class
+core\common\CommonBean.class
+core\model\Role.class

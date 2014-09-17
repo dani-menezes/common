@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<jboss-web>
+    <!-- URL to access the web module -->
+    <context-root>common</context-root>
+ 
+    <!-- Realm that will be used -->
+    <security-domain>java:/jaas/CommonRealm</security-domain>
+</jboss-web>

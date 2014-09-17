@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+<title>Coffey Atlas</title>
+</h:head>
+<h:body >
+<f:view contentType="text/html" locale="#{atlasTranslator.getStaticLocale()}">
+	<h:outputStylesheet library="css" name="common.css"  />
+	<div style="height: 50px;">
+		<ui:include src="/common/menu.xhtml" />
+		<ui:include src="/common/loadingStatus.xhtml" />
+		<p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()"/>
+	</div>
+	<div id="divContentPage" align="center" style="background-color:  #FEFEFE; height: 90%; overflow-y:scroll;">
+		<!-- HEADER  -->
+		<div style="width: 80%;" align="left">
+			<h:form id="formList" >
+				<h:panelGrid columns="1" cellpadding="5">
+					<p:commandButton value="#{translator['LABEL_ADD_ON']}" styleClass="buttonAdd" id="openCrudButton" actionListener="#{managerUserView.clearEntity}" oncomplete="PF('entityCreateWindow').show()" update=":formList :crudForm" rendered="#{managerUserView.user.isUserAdmin()}" />
+				</h:panelGrid>
+				<h:panelGrid columns="1" cellpadding="5" id="layerListPanelCrud" >
+					<p:growl id="messages" widgetVar="messages" showDetail="false" sticky="false" life="6500" />  
+					<p:dataTable paginatorPosition="bottom" id="entityListDT" var="dataTableUser" value="#{managerUserView.entityList}" paginator="true" rows="10" rowKey="#{dataTableUser.id}" selectionMode="single" selection="#{managerUserView.entity}" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}">
+						<f:facet name="header">#{translator['LABEL_USERS']}</f:facet>
+						<p:column headerText="#{translator['LABEL_NAME']}">
+							<h:outputText value="#{dataTableUser.name}" />
+						</p:column>
+						<p:column headerText="#{translator['LABEL_LOGIN']}" width="15%;" >
+							<h:outputText value="#{dataTableUser.login}" rendered="#{dataTableUser.origin == '0'}" />
+						</p:column>
+						<p:column headerText="#{translator['LABEL_LANGUAGE']}" width="15%;">
+							<h:outputText value="#{dataTableUser.locale}" />
+						</p:column>
+						<p:column headerText="#{translator['LABEL_EDIT']}" width="6%">
+							<div align="center">
+							   <p:commandLink action="#{managerUserView.editEntity}" oncomplete="PF('entityCreateWindow').show()" update=":crudForm :formList" ajax="true">
+							   	  <h:graphicImage value="/resources/img/edit.png" width="15px;" height="15px;" />
+							      <f:setPropertyActionListener target="#{managerUserView.entity}" value="#{dataTableUser}" />
+							   </p:commandLink>
+							</div>
+						</p:column>
+						<p:column headerText="#{translator['LABEL_DELETE']}" width="6%" rendered="#{managerUserView.user.isUserAdmin()}">
+							<div align="center">
+							   <p:commandLink action="#{managerUserView.deleteEntity}" update=":crudForm :formList" ajax="true">
+							   	  <h:graphicImage value="/resources/img/remove.png" width="19px;" height="15px;" />
+							      <f:setPropertyActionListener target="#{managerUserView.entitySelected}" value="#{dataTableUser}" />
+							   </p:commandLink>
+							</div>
+						</p:column>
+						<f:facet name="footer"><h:outputText value="#{translator['MESSAGE_TOTAL_RECORDS']}: #{managerUserView.entityListSize}"/></f:facet>
+					</p:dataTable>
+				</h:panelGrid>
+			</h:form>
+		</div>
+		<!-- Dialog -->
+		<p:dialog closeOnEscape="true" id="entityCreateModal" header="#{translator['LABEL_USER']}" widgetVar="entityCreateWindow" modal="true" showEffect="fade" hideEffect="fade" height="45%" width="45%">
+			<h:form id="crudForm">
+				<h:outputLabel for="userName" value="#{translator['LABEL_NAME']}" />&nbsp;<h:message for="userName" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+				<p:inputText id="userName" value="#{managerUserView.entity.name}" styleClass="inputValue"  disabled="#{managerUserView.entity.origin == 'L'}" /><br />
+				<h:outputLabel for="userLogin" value="#{translator['LABEL_LOGIN']}" rendered="#{managerUserView.entity.origin == '0'}"/>&nbsp;<h:message for="userLogin" style="color: red; font-size: 11px; font-weight: bold;" rendered="#{managerUserView.entity.origin ne 'L'}" /><br />
+				<p:inputText id="userLogin" value="#{managerUserView.entity.login}" styleClass="inputValue" rendered="#{managerUserView.entity.origin ne 'L'}" /><br />
+				<h:outputLabel for="userPass" value="#{translator['LABEL_PASSWORD']}" rendered="#{managerUserView.entity.origin ne 'L'}" />&nbsp;<h:message for="userPass" style="color: red; font-size: 11px; font-weight: bold;" rendered="#{managerUserView.entity.origin ne 'L'}" /><br />
+				<p:inputText id="userPass" value="#{managerUserView.entity.password}" styleClass="inputValue" rendered="#{managerUserView.entity.origin ne 'L'}" /><br />
+				<h:outputLabel for="userLanguage" value="#{translator['LABEL_LANGUAGE']}" />&nbsp;<h:message for="userLanguage" style="color: red; font-size: 11px; font-weight: bold;" /><br />
+				<p:selectOneMenu id="userLanguage" value="#{managerUserView.entity.locale}" styleClass="inputValue" >
+					<f:selectItem itemValue="pt" itemLabel="Português" />
+					<f:selectItem itemValue="en" itemLabel="English"  />
+					<f:selectItem itemValue="es" itemLabel="Español" />
+				</p:selectOneMenu><br /><br />
+				
+				<p:panelGrid columns="2" style="border: none !important;" rendered="#{managerUserView.user.isUserAdmin()}">
+					<p:column>
+						<!-- REGRAS DISPONIVEIS -->
+						<p:dataTable id="availableRoles" var="role" value="#{managerUserView.rolesAvailable}" rowKey="#{role.id}" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}">
+							<f:facet name="header">#{translator['LABEL_ROLES_AVAILABLE']}</f:facet>
+		
+							<p:column style="width:20px">
+								<div align="center">
+									<p:commandLink action="#{managerUserView.associateRole}" ajax="true" update=":crudForm:selectedRoles :crudForm:availableRoles">
+										<h:graphicImage value="/resources/img/link.png" />
+										<f:setPropertyActionListener target="#{managerUserView.roleSelected}" value="#{role}" />
+									</p:commandLink>
+								</div>
+							</p:column>
+		
+							<p:column headerText="#{translator['LABEL_NAME']}">
+								<h:outputText value="#{role.name}" />
+							</p:column>
+						</p:dataTable>
+					</p:column>
+					
+					<p:column>
+						<!-- REGRAS SELECIONADAS -->
+						<p:dataTable id="selectedRoles" var="role" value="#{managerUserView.rolesSelected}" rowKey="#{role.id}" emptyMessage="#{translator['MESSAGE_NO_RECORD_FOUND']}">
+							<f:facet name="header">#{translator['LABEL_ROLES_SELECTED']}</f:facet>
+		
+							<p:column style="width:20px">
+								<div align="center">
+									<p:commandLink action="#{managerUserView.disassociateRole}" ajax="true" update=":crudForm:selectedRoles :crudForm:availableRoles">
+										<h:graphicImage value="/resources/img/remove.png" width="19px;" height="15px;" />
+										<f:setPropertyActionListener target="#{managerUserView.roleSelected}" value="#{role}" />
+									</p:commandLink>
+								</div>
+							</p:column>
+		
+							<p:column headerText="#{translator['LABEL_NAME']}">
+								<h:outputText value="#{role.name}" />
+							</p:column>
+						</p:dataTable>
+					</p:column>
+				</p:panelGrid>
+				
+				<br />
+				<h:inputHidden id="id" value="#{managerUserView.entity.id}" />
+				<br />
+				<p:commandButton value="#{translator['LABEL_SAVE']}" update="@all" id="saveButton" actionListener="#{managerUserView.saveOrUpdateEntity}" styleClass="ui-priority-primary" />
+			</h:form>
+		</p:dialog>
+	</div>
+</f:view>	
+</h:body>
+</html>

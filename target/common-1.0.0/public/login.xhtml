@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui" >
+<h:head>
+	<h:outputStylesheet library="css" name="common.css" />
+	<title>Common module</title>
+</h:head>
+<h:body style="width: 100%!important;color: #616161;">
+	<div style="height:55px;" />
+	<div id="loginCenter" align="center" style="background-color:  #FEFEFE; height: 90%; width: 100%!important;">
+		<h:form id="loginForm" >	
+			<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+			<p style="font-size: 18px; color: #000000;">Common module</p>
+			<p:outputLabel style="font-size: 14px; color: #C41616;" value="Login / Password invalid" rendered="#{commonAuthentication.hasError()}"/>
+			<br />
+			<br />
+			<h:panelGrid columns="2">
+				<h:outputLabel value="Login: " />
+				<p:inputText type="text" id="j_username" name="j_username" value="#{commonAuthentication.login}" styleClass="inputValue" />
+				<h:outputLabel value="Password: " />
+				<p:inputText type="password" id="j_password" name="j_password" value="#{commonAuthentication.password}" styleClass="inputValue" />
+			</h:panelGrid>
+			<h:panelGrid columns="1">
+				<p:commandButton value="Enviar" id="loginButton" update="@all" action="#{commonAuthentication.doLogin()}" onsuccess="window.location = '#{CommonAuthentication.CONTEXT_URL}';" styleClass="ui-priority-primary" />
+			</h:panelGrid>
+			<br />
+		</h:form>
+	</div>
+	<div style="height:55px;" />
+</h:body>
+</html>

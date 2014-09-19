@@ -1,6 +1,9 @@
 core\service\RoleService.class
 core\common\CommonView.class
 core\common\AbstractCommonService.class
+core\service\RentService.class
+core\model\Rent.class
+core\view\RentView.class
 core\common\CommonAuthentication.class
 core\common\exception\CommonException.class
 core\common\AbstractCommonView.class

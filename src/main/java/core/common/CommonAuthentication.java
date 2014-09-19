@@ -1,7 +1,5 @@
 package core.common;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -16,10 +14,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import core.common.exception.CommonException;
 import core.internationalization.CommonTranslator;
 import core.model.CommonUser;
-import core.model.Role;
 import core.service.CommonUserService;
 import core.service.RoleService;
 
@@ -91,32 +87,32 @@ public class CommonAuthentication {
 	 * @return {@link CommonUser}
 	 */
 	public CommonUser getUser() {
-		try {
-			ExternalContext context = this.getContext();
-			Object principal = context.getUserPrincipal();
-			List<Role> roles = new ArrayList<Role>();
-			this.user = atlasUserService.findByLogin(principal.toString());
-			if (this.user != null) {
-				roles = atlasUserService.fetchRolesAssociated(this.user.getId());
-				this.user.setRoles(roles);
-			} else {
-				CommonUser ldapUser = new CommonUser();
-				ldapUser.setName(principal.toString());
-				ldapUser.setLogin(principal.toString());
-				ldapUser.setPassword(CommonAuthentication.LDAP_DEFAULT_PASSWORD);
-				ldapUser.setLocale(CommonTranslator.PT_LANGUANGE);
-				roles.add(roleService.findByName(Role.USER_ROLE));
-				ldapUser.setRoles(roles);
-				ldapUser.setOrigin(CommonAuthentication.LDAP_FLAG);
-				atlasUserService.saveOrUpdate(ldapUser);
-				this.user = ldapUser;
-			}
-		} catch (CommonException e) {
-			this.addErrorMessage(e);
-		} catch (Exception e) {
-			this.addErrorMessage(e);
-		}
-        return this.user;
+//		try {
+//			ExternalContext context = this.getContext();
+//			Object principal = context.getUserPrincipal();
+//			List<Role> roles = new ArrayList<Role>();
+//			this.user = atlasUserService.findByLogin(principal.toString());
+//			if (this.user != null) {
+//				roles = atlasUserService.fetchRolesAssociated(this.user.getId());
+//				this.user.setRoles(roles);
+//			} else {
+//				CommonUser ldapUser = new CommonUser();
+//				ldapUser.setName(principal.toString());
+//				ldapUser.setLogin(principal.toString());
+//				ldapUser.setPassword(CommonAuthentication.LDAP_DEFAULT_PASSWORD);
+//				ldapUser.setLocale(CommonTranslator.PT_LANGUANGE);
+//				roles.add(roleService.findByName(Role.USER_ROLE));
+//				ldapUser.setRoles(roles);
+//				ldapUser.setOrigin(CommonAuthentication.LDAP_FLAG);
+//				atlasUserService.saveOrUpdate(ldapUser);
+//				this.user = ldapUser;
+//			}
+//		} catch (CommonException e) {
+//			this.addErrorMessage(e);
+//		} catch (Exception e) {
+//			this.addErrorMessage(e);
+//		}
+        return new CommonUser();
     }
  
     /**

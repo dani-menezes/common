@@ -10,8 +10,8 @@
 		<class>core.model.CommonUser</class>
 		<class>core.model.Role</class>
 		<properties>
-			<property name="jboss.entity.manager.jndi.name" value="java:/CommonEntityManager" />
-			<property name="jboss.entity.manager.factory.jndi.name" value="java:/CommonEntityManagerFactory" />
+			<property name="jboss.entity.manager.jndi.name" value="java:/commonEntityManager" />
+			<property name="jboss.entity.manager.factory.jndi.name" value="java:/commonEntityManagerFactory" />
 		</properties>
 	</persistence-unit>
 </persistence>

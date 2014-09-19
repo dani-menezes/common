@@ -15,13 +15,13 @@ import core.common.exception.CommonException;
 import core.internationalization.CommonTranslator;
 
 /**
- * Prover os metodos comuns de comunicação da camada de visão.
+ * Implements the commons methods by view layer.
  * @author Daniel Menezes <tt>daniel.afmenezes@gmail.com</tt>
- * @param <E> Entidade relacionada
+ * @param <E> Entity related
  */
 public abstract class AbstractCommonView<E extends CommonBean> implements CommonView<E>, Converter {
 	
-	/** Logger da instância. */
+	/** Instance Logger. */
 	protected final Logger logger = LogManager.getLogManager().getLogger(AbstractCommonView.class.getName());
 
 	/**
